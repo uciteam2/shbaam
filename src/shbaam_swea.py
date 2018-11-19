@@ -18,6 +18,7 @@ def print_filenames(filenames):
     print('Input filenames: ')
     print(' - swe        netcdf    ' + filenames['swe_netcdf'])
     print(' - polygon    shapefile ' + filenames['polygon_shapefile'])
+
     print('Output filenames: ')
     print(' - point      shapefile ' + filenames['point_shapefile'])
     print(' - timeseries csv       ' + filenames['timeseries_csv'])
@@ -45,6 +46,9 @@ def get_time_step(time_array):
         return abs(time_array[1] - time_array[0])
     else:
         return 0
+
+def close_swe_netcdf(swe):
+    swe['file'].close()
 
 def read_swe_netcdf(swe_netcdf):
     print('Read GLDAS netCDF file')
@@ -86,19 +90,17 @@ def create_point_shapefile(swe, polygon, point_shapefile):
         return
 
     longitude_array = swe['longitude_array']
-    latitude_array = swe['latitude_array']
-
-    polygon_driver = polygon.driver
-    point_driver = polygon_driver
-
-    polygon_crs = polygon.crs
-    point_crs = polygon_crs.copy()
+    latitude_array  = swe['latitude_array']
+    polygon_driver  = polygon.driver
+    point_driver    = polygon_driver
+    polygon_crs     = polygon.crs
+    point_crs       = polygon_crs.copy()
 
     point_schema = {'geometry': 'Point',                                       \
                     'properties': {'lon_index':  'int:4',                      \
                                    'lat_index':  'int:4'}}
     with fiona.open(point_shapefile, 'w', driver = point_driver,
-                                          crs = point_crs,
+                                          crs    = point_crs,
                                           schema = point_schema) as point: 
         for swe_longitude_index in range(len(longitude_array)):
             longitude = longitude_array[swe_longitude_index]
@@ -138,10 +140,10 @@ def find_intersection(polygon, point, index, swe):
         for point_feature_id in [int(x) for x in list(                         \
                                  index.intersection(polygon_shape.bounds))]:
             point_feature = point[point_feature_id]
-            point_shape = shapely.geometry.shape(point_feature['geometry'])
+            point_shape   = shapely.geometry.shape(point_feature['geometry'])
             if polygon_prepared.contains(point_shape):
                 longitude_index = point_feature['properties']['lon_index']
-                latitude_index = point_feature['properties']['lat_index']
+                latitude_index  = point_feature['properties']['lat_index']
                 target_lon_indexes.append(longitude_index)
                 target_lat_indexes.append(latitude_index)
 
@@ -355,7 +357,7 @@ def main():
 
     # Get indexes of target
     target_indexes     = compute_target_region(swe,                            \
-                                               filenames['polygon_shapefile'], \ 
+                                               filenames['polygon_shapefile'], \
                                                filenames['point_shapefile'])    
 
     # Compute 
@@ -374,7 +376,7 @@ def main():
     # Print timeseries
     print_computations(timeseries)
 
-    swe['file'].close()
+    close_swe_netcdf(swe)    
 
 if __name__ == '__main__':
     main()
