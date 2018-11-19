@@ -29,9 +29,6 @@ def check_arguments():
         print('Error: must be 5 arguments')
         raise SystemExit(22)   
 
-def read_arguments():
-    return [sys.argv[i] for i in range(1, 6)]
-
 def check_input_filenames(input_filenames):
     for input_file in input_filenames:
         try:
@@ -349,31 +346,26 @@ def read_filenames():
     return filenames
 
 def main():
-    # Get filenames from command line
     filenames          = read_filenames()
 
     # Read swe from GLDAS file
     swe                = read_swe_netcdf(filenames['swe_netcdf'])
 
-    # Get indexes of target
     target_indexes     = compute_target_region(swe,                            \
                                                filenames['polygon_shapefile'], \
                                                filenames['point_shapefile'])    
 
-    # Compute 
     long_term_means    = compute_long_term_means(target_indexes, swe)
     surface_areas      = compute_surface_areas(target_indexes, swe)
     total_surface_area = compute_total_surface_area(surface_areas)
     timeseries         = compute_timeseries(swe, target_indexes, surface_areas,\
                                             long_term_means, total_surface_area)
 
-    # Write output
     write_timeseries_csv(filenames['timeseries_csv'], timeseries,              \
                          swe['time_size'])
     write_map_netcdf(filenames['map_netcdf'], swe, target_indexes,             \
                      long_term_means)
 
-    # Print timeseries
     print_computations(timeseries)
 
     close_swe_netcdf(swe)    

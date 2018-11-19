@@ -2,7 +2,7 @@
 
 input_folder="../input/GLDAS/GLDAS_VIC10_M/2002"
 
-./shbaam_conc.py $input_folder/*.nc4 $input_folder/GLDAS_VIC10_M.A200204_200212.nc4
+./shbaam_conc.py $input_folder/GLDAS_VIC10_M.A2002*.001.grb.SUB.nc4 $input_folder/GLDAS_VIC10_M.A200204_200212.nc4
 
 echo 
 echo "Start testing concatenation"
