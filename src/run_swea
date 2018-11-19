@@ -1,0 +1,24 @@
+#!/bin/bash
+
+target="Nepal"
+program='shbaam_swea.py'
+input1='../input/GLDAS/GLDAS_VIC10_M/2002/GLDAS_VIC10_M.A200204_200212.nc4'
+input2="../input/SERVIR_STK/$target.shp"
+output1="../output/SERVIR_STK/GLDAS.VIC.pnt_tst.shp"
+output2="../output/SERVIR_STK/timeseries_swea_$target_tst.csv"
+output3="../output/SERVIR_STK/map_swea_$target_tst.nc"
+
+
+./$program $input1 $input2 $output1 $output2 $output3
+
+
+
+
+
+
+
+
+
+
+
+
