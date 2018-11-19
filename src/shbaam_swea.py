@@ -305,7 +305,7 @@ def write_map_netcdf(map_netcdf, swe, target_indexes, long_term_means):
 
     source_swe_variable         = swe['swe']
     swe_variable.long_name      = source_swe_variable.long_name
-    swe_variable.units          = source_swe_variable.units
+    swe_variable.units          = u'mm'
     swe_variable.code           = source_swe_variable.code
     swe_variable.table          = source_swe_variable.table
     swe_variable.missing_value  = source_swe_variable.missing_value
