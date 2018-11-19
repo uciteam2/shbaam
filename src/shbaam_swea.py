@@ -208,17 +208,21 @@ def compute_timeseries(swe, target_indexes, surface_areas,                     \
                        long_term_means, total_surface_area):
     print('Compute total snow water equivalent anomaly timeseries')
     timeseries=[]
+
+    # The original units for snow water equivalent is millimeter, so we need to
+    # convert it to meter
+    millimeters_in_one_meter = 1000
     for time in range(swe['time_size']):
         cumulative_value = 0
         for longitude_index, latitude_index, surface_area, long_term_mean in   \
             zip(target_indexes['lon'], target_indexes['lat'],                  \
                 surface_areas, long_term_means):
-
             value = (swe['swe'][time, latitude_index, longitude_index]         \
-                   - long_term_mean)                                           \
+                   - long_term_mean) / millimeters_in_one_meter                \
                     * surface_area
             cumulative_value += value
-        timeseries.append(cumulative_value / total_surface_area)
+        timeseries.append(millimeters_in_one_meter *                           \
+                          cumulative_value / total_surface_area)
 
     return timeseries
 
