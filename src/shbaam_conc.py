@@ -23,7 +23,7 @@ def get_input_output_files(files):
 def print_information(input_files, output_file):
     print('input  files: ')
     for input_file in input_files:
-      print('  ' + str(input_file))
+        print('  ' + str(input_file))
     print('output files: ')
     print('  ' + str(output_file))
 
