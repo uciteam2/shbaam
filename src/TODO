@@ -1,6 +1,0 @@
-hours since
-
-1. use the test scripts in the tst folder
-2. set up the CI/CD, making sure they pass the tests.
-3. update the requirements document, because another library is introduced to compute time strings
-4. write unit test

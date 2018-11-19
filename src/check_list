@@ -2,5 +2,4 @@
 2. units for swe is stored as mm, as discussed at last meeting. Should bring this up
    again for the next meeting.
 3. Should the code check if a variable exists before copying? Or rather, we should know
-   advance that these variables should exist. Otherwise, it should be an error.
-4. CF-1.6 is for the old code, do we stick to it? The latest is CF-1.7
+   advance that these variables should exist. Otherwise, it should abort already.

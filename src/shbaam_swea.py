@@ -310,7 +310,6 @@ def write_map_netcdf(map_netcdf, swe, target_indexes, long_term_means):
     swe_variable.code           = source_swe_variable.code
     swe_variable.table          = source_swe_variable.table
     swe_variable.missing_value  = source_swe_variable.missing_value
-    
 
     print(' - Populate static data')
     lat_variable[:]  = swe['latitude_array'][:]
@@ -351,14 +350,11 @@ def read_filenames():
 
 def main():
     filenames          = read_filenames()
-
-    # Read swe from GLDAS file
     swe                = read_swe_netcdf(filenames['swe_netcdf'])
 
     target_indexes     = compute_target_region(swe,                            \
                                                filenames['polygon_shapefile'], \
                                                filenames['point_shapefile'])    
-
     long_term_means    = compute_long_term_means(target_indexes, swe)
     surface_areas      = compute_surface_areas(target_indexes, swe)
     total_surface_area = compute_total_surface_area(surface_areas)
@@ -371,7 +367,6 @@ def main():
                      long_term_means)
 
     print_computations(timeseries)
-
     close_swe_netcdf(swe)    
 
 if __name__ == '__main__':
