@@ -54,6 +54,7 @@ def copy_variables(output_netcdf4, input_netcdf4, input_files):
         output_variable = output_netcdf4.createVariable(variable_name, variable.datatype, variable.dimensions)
         for attribute_name in variable.ncattrs():
            output_variable.setncattr(attribute_name, variable.getncattr(attribute_name))
+    output_netcdf4.variables['time'].units = output_netcdf4.variables['time'].units.replace('hours', 'months')
 
     output_netcdf4.variables['lat'][:]  = input_netcdf4.variables['lat'][:]   
     output_netcdf4.variables['lon'][:]  = input_netcdf4.variables['lon'][:]
