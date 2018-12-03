@@ -1,5 +1,0 @@
-1. fill value is not related with RUNSF, the old code is.
-2. units for swe is stored as mm, as discussed at last meeting. Should bring this up
-   again for the next meeting.
-3. Should the code check if a variable exists before copying? Or rather, we should know
-   advance that these variables should exist. Otherwise, it should abort already.
