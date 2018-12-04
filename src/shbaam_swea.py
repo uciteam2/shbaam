@@ -15,9 +15,10 @@ import math
 import csv
 import dateutil.relativedelta
 
+
 advanced               = False
 filename_tags_provided = False
-
+add_all_variable_names = False
 
 def get_time_step(time_array):
     if len(time_array) > 1:
@@ -61,7 +62,6 @@ def read_netcdf(netcdf):
                                - data['longitude_array'][0])
     data['latitude_step']   = abs(data['latitude_array'][1]                    \
                                - data['latitude_array'][0])
-
 
     print(' - Number of longitudes : '         + str(data['longitude_size']))
     print(' - Number of latitudes : '          + str(data['latitude_size']))
@@ -387,6 +387,7 @@ def print_usage():
     print('')
 
     print('Options:')
+    print('  -a,  Select all the variable names in the netcdf file to compute.')
     print('  -d,  Select the variable names to compute, SWE, Canint, etc. ' +  \
      'Seperate the names with a comma. The default variable name is SWE.')
     print('  -p,  Add tags to the output filenames. Provide the tags in ' +    \
@@ -404,16 +405,20 @@ def print_usage():
 def read_command_line():
     global advanced
     global filename_tags_provided
+    global add_all_variable_names
 
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hd:p:t:')
+        options, arguments = getopt.getopt(sys.argv[1:], 'hd:p:t:a')
     except getopt.GetoptError:
         print_usage()
   
     command_info = {'source': '', 'model': '', 'location': '',                \
-                    'start_time': '2002-04-01 00:00:00'}
+                    'start_time': '2002-04-01 00:00:00', 'variable_names': []}
     for option, argument in options:
-        if option == '-h':
+        if option == '-a':
+          advanced = True
+          add_all_variable_names = True
+        elif option == '-h':
             print_usage()
             raise SystemExit(0)
         elif option == '-d':
@@ -470,21 +475,32 @@ def check_if_input_files_exist(input_command_info):
             print('ERROR - Unable to open \'' + input_file + '\'')
             raise SystemExit(22)
 
+
+def get_computable_variables(command_info, data):
+    return [variable_name for variable_name,                                   \
+     variable in data['file'].variables.iteritems()                            \
+     if variable_name not in ['time', 'lat', 'lon']]
+
 def validate_variable_name(command_info, data):
-    all_variables = [variable_name for variable_name,                         \
-                     variable in data['file'].variables.iteritems()]
+    all_variables = get_computable_variables(command_info, data)
     if advanced:
        for variable_name in command_info['variable_names']:
            if variable_name not in all_variables:
-               print('ERROR: variable name ' + str(variable_name) +           \
+               print('ERROR: variable name ' + str(variable_name) +            \
                      ' is not in the netcdf file')
                raise SystemExit(22)
+
+def post_command_info_setup(command_info, data):
+    if add_all_variable_names:
+        assert len(command_info['variable_names']) == 0
+        command_info['variable_names'] = get_computable_variables(command_info, data)
 
 def main():
     command_info = read_command_line()
     print_command_info(command_info)
 
     data = read_netcdf(command_info['netcdf'])
+    post_command_info_setup(command_info, data)
     validate_variable_name(command_info, data)
     target_indexes = compute_target_region(data,                               \
                                     command_info['polygon_shapefile'],         \
