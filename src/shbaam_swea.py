@@ -398,7 +398,9 @@ def print_usage():
     print('')
     print('Examples:')
     print('  ./shbaam_swea.py GLDAS_netcdf.nc Nepal.shp ' +                    \
-    'GLDAS.VIC.shp timeseries_swea_Nepal.csv map_swea_Nepal.nc')
+          'GLDAS.VIC.shp timeseries_swea_Nepal.csv map_swea_Nepal.nc')
+    print('  ./shbaam_swea.py -a -p GLDAS,VIC,Nepal ' +                        \
+          'netcdf.nc4 Nepal.shp ./output_folder')
     print('  ./shbaam_swea.py -d SWE,Canint -p GLDAS,VIC,Nepal' +              \
      ' -t \'2002-04-01 00:00:00\' netcdf_file.nc4 Nepal.shp ./output_folder')
 
@@ -493,7 +495,8 @@ def validate_variable_name(command_info, data):
 def post_command_info_setup(command_info, data):
     if add_all_variable_names:
         assert len(command_info['variable_names']) == 0
-        command_info['variable_names'] = get_computable_variables(command_info, data)
+        command_info['variable_names'] = get_computable_variables(command_info,\
+                                                                  data)
 
 def main():
     command_info = read_command_line()
@@ -524,7 +527,8 @@ def main():
 
 
     print('------------------ End of Computation ------------------')
-    write_map_netcdf(command_info['map_netcdf'], data, target_indexes, command_info)
+    write_map_netcdf(command_info['map_netcdf'], data,                         \
+                     target_indexes, command_info)
 
 
     close_netcdf(data)    
