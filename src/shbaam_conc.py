@@ -5,6 +5,7 @@ import os.path
 import netCDF4
 import numpy
 
+
 def print_usage():
     print('Usage: ./shbaam_conc.py [input file]... [ouput file]')
 
@@ -54,19 +55,24 @@ def copy_variables(output_netcdf4, input_netcdf4, input_files):
         output_variable = output_netcdf4.createVariable(variable_name, variable.datatype, variable.dimensions)
         for attribute_name in variable.ncattrs():
            output_variable.setncattr(attribute_name, variable.getncattr(attribute_name))
-    output_netcdf4.variables['time'].units = output_netcdf4.variables['time'].units.replace('hours', 'months')
 
     output_netcdf4.variables['lat'][:]  = input_netcdf4.variables['lat'][:]   
     output_netcdf4.variables['lon'][:]  = input_netcdf4.variables['lon'][:]
-    output_netcdf4.variables['time'][:] = numpy.arange(0, len(input_files), 1)
 
+    start_time_strings = []
     for i in range(len(input_files)):
         input_file = netCDF4.Dataset(input_files[i], 'r')
         
         output_netcdf4.variables['SWE'][i]    = input_file.variables['SWE'][0]
         output_netcdf4.variables['Canint'][i] = input_file.variables['Canint'][0]
+ 
+        start_time_strings.append(input_file.variables['time'].units)
 
         input_file.close()
+
+    date_objects = [netCDF4.num2date(0, start_time_string, input_netcdf4.variables['time'].calendar) for start_time_string in start_time_strings]
+    for i in range(len(input_files)):
+        output_netcdf4.variables['time'][i] = netCDF4.date2num(date_objects[i], start_time_strings[0], input_netcdf4.variables['time'].calendar)
 
 def handle_concatenation(input_files, output_file):
     output_netcdf4 = netCDF4.Dataset(output_file, 'w', format='NETCDF4')

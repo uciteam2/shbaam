@@ -13,7 +13,6 @@ import shapely.prepared
 import rtree
 import math
 import csv
-import dateutil.relativedelta
 
 
 advanced               = False
@@ -260,14 +259,14 @@ def compute_timeseries(data, target_indexes, surface_areas,                    \
     return timeseries
 
 
-def compute_time_strings(start_time_string, time_size):
+def compute_time_strings(start_time_string, time_size, time_array):
     """Returns the list of time strings, determined by months"""
     print(' - Determine time strings')
     time_strings = []
     start_time = datetime.datetime.strptime(start_time_string,                 \
                                             '%Y-%m-%d %H:%M:%S')
-    for month_passed in range(time_size):
-        time_delta = dateutil.relativedelta.relativedelta(months=month_passed)
+    for i in range(time_size):
+        time_delta = datetime.timedelta(hours=time_array[i])
         time = start_time + time_delta
         # Only preserve month, day, year
         time_string = time.strftime('%m/%d/%Y')
@@ -277,17 +276,18 @@ def compute_time_strings(start_time_string, time_size):
     return time_strings
 
 
-def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time):
+def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time, computation_results, time_array):
     """Takes the list of time strings and                                      \
     creates the output CSV file of the time strings"""
     print('Write timeseries_csv: ' + timeseries_csv)
 
-    time_strings = compute_time_strings(start_time, time_size)
+    time_strings = compute_time_strings(start_time, time_size, time_array)
 
     with open(timeseries_csv, 'wb') as csvfile:
         csvwriter = csv.writer(csvfile, dialect='excel')
-        for i in range(len(timeseries)):
-            line = [time_strings[i], timeseries[i]]
+        csvwriter.writerow(['date'] + [computation_result[0] for computation_result in computation_results])
+        for i in range(time_size):
+            line = [time_strings[i]] + [computation_result[3][i] for computation_result in computation_results]
             csvwriter.writerow(line)
 
     print(' - timeseries_csv written')
@@ -596,14 +596,13 @@ def main():
         timeseries = compute_timeseries(data, target_indexes, surface_areas,   \
                                         long_term_means, total_surface_area)
 
-        # Write to output
-        write_timeseries_csv(command_info['timeseries_csv'], timeseries,       \
-                             data['time_size'], command_info['start_time'])
-
         print_computations(timeseries)
-        data['data'].append((variable_name, data['cur_data'], long_term_means))
+        data['data'].append((variable_name, data['cur_data'], long_term_means, timeseries))
 
     print('------------------ End of Computation ------------------')
+    # Write to output
+    write_timeseries_csv(command_info['timeseries_csv'], timeseries,       \
+                         data['time_size'], command_info['start_time'], data['data'], data['file'].variables['time'])
     write_map_netcdf(command_info['map_netcdf'], data, target_indexes,         \
                      command_info)
 
