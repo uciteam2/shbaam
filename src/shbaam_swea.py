@@ -21,7 +21,7 @@ filename_tags_provided = False
 add_all_variable_names = False
 
 def get_time_step(time_array):
-    """Calculates the difference of the the time indexes
+    """Calculates the difference of the the time indexes \
         Returns the int time_step"""
     if len(time_array) > 1:
         return abs(time_array[1] - time_array[0])
@@ -35,7 +35,7 @@ def close_netcdf(data):
 
 
 def get_fill_value(f):
-    """Takes the netCDF file
+    """Takes the netCDF file \
         Returns the int fill_value"""
     fill_value = netCDF4.default_fillvals['f4']
     if 'RUNSF' in f.variables:
@@ -49,9 +49,9 @@ def get_fill_value(f):
 
 
 def read_netcdf(netcdf):
-    """opens the input netCDF file
-        Returns the Dict, containing the necessary values for calculations and
-        later file creation"""
+    """opens the input netCDF file                          \
+        Returns the Dict, containing the necessary values for \
+            calculations and later file creation"""
     print('Read GLDAS netCDF file')
 
     f = netCDF4.Dataset(netcdf, 'r')
@@ -86,7 +86,8 @@ def read_netcdf(netcdf):
 
 
 def create_point_shapefile(data, polygon, point_shapefile):
-    """Creates a output point shapefile, containing the geometry and properties of the Point
+    """Creates a output point shapefile, containing the geometry \
+        and properties of the Point                             \
         If the file already exists, the cached one will be used instead"""
     print('Create a point shapefile with all the GLDAS grid cells')
     if os.path.exists(point_shapefile):
@@ -123,7 +124,7 @@ def create_point_shapefile(data, polygon, point_shapefile):
 
 
 def create_spatial_index(point):
-    """Return an Index object containing
+    """Return an Index object containing               \
         the int id and 4-tuple bound of the point shape"""
     print('Create spatial index for the bounds of each point feature')
 
@@ -139,11 +140,10 @@ def create_spatial_index(point):
 
 
 def find_intersection(polygon, point, index, data):
-    """
-    Iterates through the features of the polygon and the index object's list of intersection bounds
-    Returns the Dict, containing the list of longitude and latitude indexes
-    that intersect with the polygon
-    """
+    """Iterates through the features of the polygon                             \
+            and the index object's list of intersection bounds                  \
+        Returns the Dict, containing the list of longitude and latitude indexes \
+            that intersect with the polygon"""
     print('Find GLDAS grid cells that intersect with polygon')
     target_lon_indexes = []
     target_lat_indexes = []
@@ -167,11 +167,10 @@ def find_intersection(polygon, point, index, data):
 
 
 def compute_target_region(data, polygon_shapefile, point_shapefile):
-    """Opens the input netCDF input file,
-     used to create the output point shapefile
-    Returns the Dict, containing the list of longitude and latitude indexes
-    that intersect with the polygon, computed by find_intersction
-     """
+    """Opens the input netCDF input file,                                         \
+            used to create the output point shapefile                             \
+        Returns the Dict, containing the list of longitude and latitude indexes   \
+            that intersect with the polygon, computed by find_intersction"""
     polygon = fiona.open(polygon_shapefile, 'r')
     print(' - The number of polygon features : ' + str(len(polygon)))
 
@@ -187,9 +186,8 @@ def compute_target_region(data, polygon_shapefile, point_shapefile):
 
 
 def compute_long_term_means(target_indexes, data):
-    """Returns the list of means by iterating through the data,
-    provided by the input netCDF file
-    """
+    """Returns the list of means by iterating through the data, \
+    provided by the input netCDF file"""
     print('Find long-term mean for each intersecting GLDAS grid cell')
     long_term_means = []
     for longitude_index, latitude_index in \
@@ -207,9 +205,8 @@ def compute_long_term_means(target_indexes, data):
 
 
 def compute_surface_areas(target_indexes, data):
-    """Returns the list of surface areas,
-    computed by using the data, provided by the input netCDF file
-    """
+    """Returns the list of surface areas,                       \
+    computed by using the data, provided by the input netCDF file"""
 
     print('Compute surface area of each grid cell')
     surface_areas = [0] * len(target_indexes['lon'])
@@ -228,9 +225,8 @@ def compute_surface_areas(target_indexes, data):
 
 
 def compute_total_surface_area(surface_areas):
-    """
-    Returns the int total Surface area by adding the list of given surface areas
-    """
+    """Returns the int total Surface area by        \
+        adding the list of given surface areas"""
     print('Compute total surface area')
 
     total_surface_area = sum(surface_areas)
@@ -241,9 +237,8 @@ def compute_total_surface_area(surface_areas):
 
 def compute_timeseries(data, target_indexes, surface_areas, \
                        long_term_means, total_surface_area):
-    """
-    Returns the list of timeseries, by dividing cumulative value and the total surface area
-    """
+    """Returns the list of timeseries,                      \
+        by dividing cumulative value and the total surface area"""
     print('Compute total snow water equivalent anomaly timeseries')
     timeseries = []
 
@@ -266,8 +261,7 @@ def compute_timeseries(data, target_indexes, surface_areas, \
 
 
 def compute_time_strings(start_time_string, time_size):
-    """Returns the list of time strings, determined by months
-    """
+    """Returns the list of time strings, determined by months"""
     print(' - Determine time strings')
     time_strings = []
     start_time = datetime.datetime.strptime(start_time_string, \
@@ -284,10 +278,8 @@ def compute_time_strings(start_time_string, time_size):
 
 
 def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time):
-    """
-    Takes the list of time strings and
-    creates the output CSV file of the time strings
-    """
+    """Takes the list of time strings and           \
+    creates the output CSV file of the time strings"""
     print('Write timeseries_csv: ' + timeseries_csv)
 
     time_strings = compute_time_strings(start_time, time_size)
@@ -302,10 +294,8 @@ def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time):
 
 
 def write_map_netcdf(map_netcdf, data, target_indexes, command_info):
-    """
-    Creates the ouput nc file, containing dimensions, variables,
-    global attributes, variable attributes, and static data
-    """
+    """Creates the ouput nc file, containing dimensions, variables, \
+    global attributes, variable attributes, and static data"""
     print('Write map_netcdf: ' + map_netcdf)
 
     print(' - Create netCDF file')
@@ -394,8 +384,7 @@ def print_computations(timeseries):
 
 
 def form_filename(command_info, file_type, variable_name=None):
-    """ Returns the parsed filename and its file extensions
-    """
+    """Returns the parsed filename and its file extensions"""
     if file_type == 'shp':
         filename = '.'.join(filter(None, [command_info['source'], \
                                           command_info['model'], 'pnt_tst.shp']))
@@ -411,9 +400,8 @@ def form_filename(command_info, file_type, variable_name=None):
 
 
 def read_command_info(filenames, command_info):
-    """Checks if the file exists and can print the usage of the file
-    based on whether the command is in advanced mode
-    """
+    """Checks if the file exists and can print the usage of the file    \
+    based on whether the command is in advanced mode"""
     if advanced and len(filenames) != 3:
         print_usage()
         print('ERROR: Exactly 5 pathnames must be provided')
@@ -472,8 +460,8 @@ def print_usage():
 
 
 def read_command_line():
-    """Checks command line and parses the options
-        Returns the dict, containing the Source, Model, Location,
+    """Checks command line and parses the options                   \
+        Returns the dict, containing the Source, Model, Location,   \
         start_time, and variable_names"""
     global advanced
     global filename_tags_provided
@@ -520,9 +508,8 @@ def read_command_line():
 
 
 def set_up(data, variable_name, command_info):
-    """Registers each variable before computing
-    curr_data is the currently processed variable
-    """
+    """Registers each variable before computing     \
+    curr_data is the currently processed variable"""
     if advanced:
         command_info['timeseries_csv'] = form_filename(command_info, \
                                                        'csv', variable_name)
@@ -564,7 +551,8 @@ def get_computable_variables(command_info, data):
 
 
 def validate_variable_name(command_info, data):
-    """Validates if the variable_name used is in accordance computable/proper variable names"""
+    """Validates if the variable_name used is        \
+        in accordance computable/proper variable names"""
     all_variables = get_computable_variables(command_info, data)
     if advanced:
         for variable_name in command_info['variable_names']:
@@ -575,8 +563,8 @@ def validate_variable_name(command_info, data):
 
 
 def post_command_info_setup(command_info, data):
-    """Ensures the initial variable names in command_info contains nothing
-    and proceeds to add the list of proper variable names from the function,
+    """Ensures the initial variable names in command_info contains nothing  \
+    and proceeds to add the list of proper variable names from the function,\
     get_computable_variables"""
     if add_all_variable_names:
         assert len(command_info['variable_names']) == 0
