@@ -21,7 +21,7 @@ filename_tags_provided = False
 
 def get_time_step(time_array):
     if len(time_array) > 1:
-        return abs(time_array[1] - time_array[0])
+        return abs(time_array[1] - time_array[0])                              
     else:
         return 0
 
@@ -46,19 +46,19 @@ def read_netcdf(netcdf):
     data['time_array']      = f.variables['time']
     data['time_step']       = get_time_step(data['time_array'])
     data['fill_value']      = netCDF4.default_fillvals['f4']
-    data['longitude_step']  = abs(data['longitude_array'][1]                     \
+    data['longitude_step']  = abs(data['longitude_array'][1]                   \
                                - data['longitude_array'][0])
-    data['latitude_step']   = abs(data['latitude_array'][1]                      \
+    data['latitude_step']   = abs(data['latitude_array'][1]                    \
                                - data['latitude_array'][0])
 
 
-    print(' - The number of longitudes : '         + str(data['longitude_size']))
-    print(' - The number of latitudes : '          + str(data['latitude_size']))
-    print(' - The number of time steps : '         + str(data['time_size']))
-    print(' - The interval size for longitudes : ' + str(data['longitude_step']))
-    print(' - The interval size for latitudes : '  + str(data['latitude_step']))
-    print(' - The interval size for time : '       + str(data['time_step']))
-    print(' - The fill value : '                   + str(data['fill_value']))
+    print(' - Number of longitudes : '         + str(data['longitude_size']))
+    print(' - Number of latitudes : '          + str(data['latitude_size']))
+    print(' - Number of time steps : '         + str(data['time_size']))
+    print(' - Interval size for longitudes : ' + str(data['longitude_step']))
+    print(' - Interval size for latitudes : '  + str(data['latitude_step']))
+    print(' - Interval size for time : '       + str(data['time_step']))
+    print(' - Fill value : '                   + str(data['fill_value']))
 
     return data
 
@@ -87,9 +87,9 @@ def create_point_shapefile(data, polygon, point_shapefile):
                latitude = latitude_array[data_latitude_index]
                point_prepared = {'lon_index':  data_longitude_index,            \
                                  'lat_index':  data_latitude_index}
-               point_geometry = shapely.geometry.mapping(                      \
+               point_geometry = shapely.geometry.mapping(                       \
                                 shapely.geometry.Point((longitude,latitude)))
-               point.write({'properties': point_prepared,                      \
+               point.write({'properties': point_prepared,                       \
                             'geometry'  : point_geometry})
 
     print(' - Point shapefile created')
@@ -143,9 +143,6 @@ def compute_target_region(data, polygon_shapefile, point_shapefile):
 
     return target
 
-# For each intersecting grid cell, we obtain
-# sum of each month's data change / months
-# For a grid cell, long term mean is the average of change.
 def compute_long_term_means(target_indexes, data):
     print('Find long-term mean for each intersecting GLDAS grid cell')
     long_term_means = []
@@ -154,7 +151,7 @@ def compute_long_term_means(target_indexes, data):
 
         mean = 0
         for time in range(data['time_size']):
-            mean += data['current_data'][time,                                           \
+            mean += data['cur_data'][time,                                     \
                                latitude_index,                                 \
                                longitude_index] 
         long_term_means.append(mean)
@@ -171,9 +168,9 @@ def compute_surface_areas(target_indexes, data):
     for i in range(len(target_indexes['lon'])):
         latitude_index   = target_indexes['lat'][i]
         latitude         = data['latitude_array'][latitude_index]
-        surface_areas[i] = earth_radius * math.radians(data['latitude_step'])   \
+        surface_areas[i] = earth_radius * math.radians(data['latitude_step'])  \
                                         * earth_radius                         \
-                                        * math.radians(data['longitude_step'])  \
+                                        * math.radians(data['longitude_step']) \
                                         * math.cos(math.radians(latitude))
 
     return surface_areas
@@ -186,7 +183,7 @@ def compute_total_surface_area(surface_areas):
     print(' - the area (m2) : ' + str(total_surface_area))
     return total_surface_area
 
-def compute_timeseries(data, target_indexes, surface_areas,                     \
+def compute_timeseries(data, target_indexes, surface_areas,                    \
                        long_term_means, total_surface_area):
     print('Compute total snow water equivalent anomaly timeseries')
     timeseries=[]
@@ -199,7 +196,7 @@ def compute_timeseries(data, target_indexes, surface_areas,                     
         for longitude_index, latitude_index, surface_area, long_term_mean in   \
             zip(target_indexes['lon'], target_indexes['lat'],                  \
                 surface_areas, long_term_means):
-            value = (data['current_data'][time, latitude_index, longitude_index]         \
+            value = (data['cur_data'][time, latitude_index, longitude_index]   \
                    - long_term_mean) / millimeters_in_one_meter                \
                     * surface_area
             cumulative_value += value
@@ -223,10 +220,10 @@ def compute_time_strings(start_time_string, time_size):
 
     return time_strings
 
-def write_timeseries_csv(timeseries_csv, timeseries, time_size):
+def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time):
     print('Write timeseries_csv: ' + timeseries_csv)
 
-    time_strings = compute_time_strings('2002-04-01 00:00:00', time_size)
+    time_strings = compute_time_strings(start_time, time_size)
 
     with open(timeseries_csv, 'wb') as csvfile:
         csvwriter = csv.writer(csvfile, dialect='excel')
@@ -236,7 +233,7 @@ def write_timeseries_csv(timeseries_csv, timeseries, time_size):
 
     print(' - timeseries_csv written')
 
-def write_map_netcdf(map_netcdf, data, target_indexes):
+def write_map_netcdf(map_netcdf, data, target_indexes, command_info):
     print('Write map_netcdf: ' + map_netcdf)
     
     print(' - Create netCDF file')
@@ -262,7 +259,7 @@ def write_map_netcdf(map_netcdf, data, target_indexes):
     h.Conventions='CF-1.6'
     h.title = ''
     h.institution = ''
-    h.source = 'SHBAAM: ' + version + ', GLDAS: '                              \
+    h.source = 'SHBAAM: ' + version + ', ' + command_info['source'] + ': '     \
                 + os.path.basename(data['filename'])
     h.history = 'date created: ' + current_time.isoformat() + '+00:00'
     h.references = 'https://github.com/c-h-david/shbaam/'
@@ -291,12 +288,13 @@ def write_map_netcdf(map_netcdf, data, target_indexes):
     time_variable[:] = data['time_array'][:]
 
     for data_info in data['data']:
-        data_name = data_info[0]
+        variable_name = data_info[0]
         values = data_info[1]
         long_term_means = data_info[2]
 
-        data_variable  = h.createVariable(data_name,  'f4', ('time', 'lat', 'lon',),    \
-                                     fill_value = data['fill_value'])
+        data_variable  = h.createVariable(variable_name,                       \
+                                          'f4', ('time', 'lat', 'lon',),       \
+                                          fill_value = data['fill_value'])
 
         source_data_variable         = values
         data_variable.long_name      = source_data_variable.long_name
@@ -309,7 +307,7 @@ def write_map_netcdf(map_netcdf, data, target_indexes):
     for lon_index, lat_index, long_term_mean in                                \
         zip(target_indexes['lon'], target_indexes['lat'], long_term_means):
         for time_index in range(data['time_size']):
-            data_variable[time_index, lat_index, lon_index] =                   \
+            data_variable[time_index, lat_index, lon_index] =                  \
             values[time_index, lat_index, lon_index] - long_term_mean     
 
     h.close()
@@ -322,13 +320,17 @@ def print_computations(timeseries):
     print(' - Minimum of time series: '+ str(numpy.min(timeseries)))
 
 
-def form_filename(command_info, file_type, data_name=None):
+def form_filename(command_info, file_type, variable_name=None):
     if file_type == 'shp':
-        filename = '.'.join(filter(None, [command_info['source'], command_info['model'], 'pnt_tst.shp']))
+        filename = '.'.join(filter(None, [command_info['source'],              \
+                                         command_info['model'], 'pnt_tst.shp']))
     elif file_type == 'csv':
-        filename = '_'.join(filter(None, ['timeseries', data_name, command_info['location'], 'tst.csv']))
+        filename = '_'.join(filter(None,                                       \
+                            ['timeseries', variable_name,                      \
+                             command_info['location'], 'tst.csv']))
     elif file_type == 'nc':
-        filename = '_'.join(filter(None, ['map_swea', command_info['location'], 'tst.nc']))
+        filename = '_'.join(filter(None, ['map_swea',                          \
+                                          command_info['location'], 'tst.nc']))
 
     return command_info['output_folder'] + '/' + filename
 
@@ -336,12 +338,14 @@ def read_command_info(filenames, command_info):
     if advanced and len(filenames) != 3:
         print_usage()
         print('ERROR: Exactly 5 pathnames must be provided')
-        print('       You must provide a netcdf file, a polygon shapefile, and a output folder')
+        print('       You must provide a netcdf file, ' +                      \
+              'a polygon shapefile, and a output folder')
         raise SystemExit(22)
     if not advanced and len(filenames) != 5:
         print_usage()
         print('ERROR: Exactly 5 pathnames must be provided.')
-        print('       You must provide a netcdf file, a polygon shapefile, pathes for a point shapefile, a timeseries file, a map netcdf file')
+        print('       You must provide a netcdf file, a polygon shapefile,' +  \
+          'pathes for a point shapefile, a timeseries file, a map netcdf file')
         raise SystemExit(22)
 
     command_info['netcdf']              = filenames[0]
@@ -356,62 +360,79 @@ def read_command_info(filenames, command_info):
         command_info['timeseries_csv']      = filenames[3]
         command_info['map_netcdf']          = filenames[4]
 
-    check_if_input_files_exist([command_info['netcdf'],                            \
+    check_if_input_files_exist([command_info['netcdf'],                        \
                               command_info['polygon_shapefile']])
 
     return command_info
 
 def print_usage():
     print('Usage: ')
-    print('  ./shbaam_sewa.py [input_netcdf_file] [input_polygon_shapefile] [output_temporary_shapefile] [output_timeseries_csv] [output_map_netcdf]')
-    print('  ./shbaam_swea.py -d [data1],[data2] -p [source,location,model] [netcdf_file] [shapefile] [output_folder]')
+    print('  ./shbaam_sewa.py [input_netcdf_file] [input_polygon_shapefile]' + \
+     '[output_temporary_shapefile] [output_timeseries_csv] [output_map_netcdf]')
+    print('  ./shbaam_swea.py -d [data1],[data2] ' +                           \
+     '[netcdf_file] [shapefile] [output_folder]')
     print('')
 
     print('Options:')
-    print('  -d,  Select the data names to compute, SWE, Canint, etc. Seperate the names with a comma.')
-    print('  -p,  Add tags to the output filenames. Provide the tags in the following order, [DATA SOURCE],[TARGET LOCATION],[DATA MODEL]')
+    print('  -d,  Select the variable names to compute, SWE, Canint, etc. ' +  \
+     'Seperate the names with a comma. The default variable name is SWE.')
+    print('  -p,  Add tags to the output filenames. Provide the tags in ' +    \
+     'the following order, [DATA SOURCE],[DATA MODEL],[TARGET LOCATION]')
+    print('  -t,  Provide start time string in the format of YYYY-MM-DD ' +    \
+      'HH:MM:SS' + '. The default is 2002-04-01 00:00:00')
 
     print('')
     print('Examples:')
-    print('  ./shbaam_swea.py netcdf_file Nepal.shp [output_temporary_shapefile] [output_timeseries_csv] [output_map_netcdf]')
-    print('  ./shbaam_swea.py -d SWE,Canint -p GLDAS,Nepal,VIC netcdf_file.nc4 Nepal.shp ./output_folder')
+    print('  ./shbaam_swea.py GLDAS_netcdf.nc Nepal.shp ' +                    \
+    'GLDAS.VIC.shp timeseries_swea_Nepal.csv map_swea_Nepal.nc')
+    print('  ./shbaam_swea.py -d SWE,Canint -p GLDAS,VIC,Nepal' +              \
+     ' -t \'2002-04-01 00:00:00\' netcdf_file.nc4 Nepal.shp ./output_folder')
 
 def read_command_line():
     global advanced
     global filename_tags_provided
 
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hd:p:o')
+        options, arguments = getopt.getopt(sys.argv[1:], 'hd:p:t:')
     except getopt.GetoptError:
         print_usage()
   
-    command_info = {'source': '', 'model': '', 'location': ''}
+    command_info = {'source': '', 'model': '', 'location': '',                \
+                    'start_time': '2002-04-01 00:00:00'}
     for option, argument in options:
         if option == '-h':
             print_usage()
             raise SystemExit(0)
         elif option == '-d':
             advanced = True
-            command_info['data_names'] = argument.split(',')
+            command_info['variable_names'] = argument.split(',')
         elif option == '-p':
             filename_tags_provided = True
             tags = argument.split(',')
+            if len(tags) != 3:
+                print_usage()
+                print('ERROR: You must provide the -p option in the order ' + \
+                      'of SOURCE,MODEL,LOCATION')
+                raise SystemExit(22)
             command_info['source'] = tags[0]
             command_info['model'] = tags[1]
             command_info['location'] = tags[2]
+        elif option == '-t':
+            command_info['start_time'] = argument
 
     # Set SWE as the default data to be processed
     if not advanced:
-        command_info['data_names'] = ['SWE']
+        command_info['variable_names'] = ['SWE']
 
     read_command_info(arguments, command_info)
 
     return command_info
 
-def set_up(data, data_name, command_info):
+def set_up(data, variable_name, command_info):
     if advanced:
-        command_info['timeseries_csv']  = form_filename(command_info, 'csv', data_name) 
-    data['current_data'] = data['file'].variables[data_name]
+        command_info['timeseries_csv']  = form_filename(command_info,         \
+                                                        'csv', variable_name) 
+    data['cur_data'] = data['file'].variables[variable_name]
 
 def print_command_info(command_info):
     print('Input files: ')
@@ -436,34 +457,45 @@ def check_if_input_files_exist(input_command_info):
             print('ERROR - Unable to open \'' + input_file + '\'')
             raise SystemExit(22)
 
+def validate_variable_name(command_info, data):
+    all_variables = [variable_name for variable_name,                         \
+                     variable in data['file'].variables.iteritems()]
+    if advanced:
+       for variable_name in command_info['variable_names']:
+           if variable_name not in all_variables:
+               print('ERROR: variable name ' + str(variable_name) +           \
+                     ' is not in the netcdf file')
+               raise SystemExit(22)
+
 def main():
     command_info = read_command_line()
     print_command_info(command_info)
 
     data = read_netcdf(command_info['netcdf'])
-    target_indexes = compute_target_region(data,                            \
-                                               command_info['polygon_shapefile'], \
-                                               command_info['point_shapefile'])    
+    validate_variable_name(command_info, data)
+    target_indexes = compute_target_region(data,                               \
+                                    command_info['polygon_shapefile'],         \
+                                    command_info['point_shapefile'])    
     surface_areas = compute_surface_areas(target_indexes, data)
     total_surface_area = compute_total_surface_area(surface_areas)
-    for data_name in command_info['data_names']:
-        print('------------------------- ' + data_name + ' -------------------------')
-        set_up(data, data_name, command_info)
+    for variable_name in command_info['variable_names']:
+        print('------------------ ' + variable_name + ' ------------------')
+        set_up(data, variable_name, command_info)
        
         long_term_means = compute_long_term_means(target_indexes, data)
-        timeseries = compute_timeseries(data, target_indexes, surface_areas,\
+        timeseries = compute_timeseries(data, target_indexes, surface_areas,   \
                                         long_term_means, total_surface_area)
 
         # Write to output
-        write_timeseries_csv(command_info['timeseries_csv'], timeseries,              \
-                             data['time_size'])
+        write_timeseries_csv(command_info['timeseries_csv'], timeseries,       \
+                             data['time_size'], command_info['start_time'])
 
         print_computations(timeseries)
-        data['data'].append((data_name, data['current_data'], long_term_means))
+        data['data'].append((variable_name, data['cur_data'], long_term_means))
 
 
-    print('------------------------ End of Computation ------------------------')
-    write_map_netcdf(command_info['map_netcdf'], data, target_indexes)
+    print('------------------ End of Computation ------------------')
+    write_map_netcdf(command_info['map_netcdf'], data, target_indexes, command_info)
 
 
     close_netcdf(data)    
