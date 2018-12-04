@@ -26,7 +26,7 @@ def get_time_step(time_array):
     else:
         return 0
 
-def close_netcdf(data):
+def close_input_netcdf(data):
     data['file'].close()
 
 def get_fill_value(f):
@@ -530,8 +530,7 @@ def main():
     write_map_netcdf(command_info['map_netcdf'], data,                         \
                      target_indexes, command_info)
 
-
-    close_netcdf(data)    
+    close_input_netcdf(data)    
 
 if __name__ == '__main__':
     main()
