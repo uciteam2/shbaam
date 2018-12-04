@@ -28,6 +28,17 @@ def get_time_step(time_array):
 def close_netcdf(data):
     data['file'].close()
 
+def get_fill_value(f):
+    fill_value = netCDF4.default_fillvals['f4']
+    if 'RUNSF' in f.variables:
+      variable = f.variables['RUNSF']
+      if '_FillValue' in variable.ncattrs():
+          fill_value = variable._FillValue
+      else:
+          fill_value = None
+
+    return fill_value    
+
 def read_netcdf(netcdf):
     print('Read GLDAS netCDF file')
 
@@ -45,7 +56,7 @@ def read_netcdf(netcdf):
     data['latitude_array']  = f.variables['lat']
     data['time_array']      = f.variables['time']
     data['time_step']       = get_time_step(data['time_array'])
-    data['fill_value']      = netCDF4.default_fillvals['f4']
+    data['fill_value']      = get_fill_value(f)
     data['longitude_step']  = abs(data['longitude_array'][1]                   \
                                - data['longitude_array'][0])
     data['latitude_step']   = abs(data['latitude_array'][1]                    \
@@ -83,6 +94,8 @@ def create_point_shapefile(data, polygon, point_shapefile):
                                           schema = point_schema) as point: 
         for data_longitude_index in range(len(longitude_array)):
             longitude = longitude_array[data_longitude_index]
+            if longitude > 180:
+                longitude -= 360
             for data_latitude_index in range(len(latitude_array)):
                latitude = latitude_array[data_latitude_index]
                point_prepared = {'lon_index':  data_longitude_index,            \
@@ -245,9 +258,9 @@ def write_map_netcdf(map_netcdf, data, target_indexes, command_info):
     lon_dimension  = h.createDimension('lon',  data['longitude_size'])
     
     print(' - Create variable')
-    time_variable = h.createVariable('time',  'i4', ('time',))
-    lat_variable  = h.createVariable('lat',   'f4', ('lat',))
-    lon_variable  = h.createVariable('lon',   'f4', ('lon',))
+    time_variable = h.createVariable('time',  'f8', ('time',))
+    lat_variable  = h.createVariable('lat',   'f8', ('lat',))
+    lon_variable  = h.createVariable('lon',   'f8', ('lon',))
     
     
     print(' - Populdate global attributes')
