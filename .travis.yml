@@ -87,9 +87,6 @@ script:
 - cd ./tst/
 - echo $TST_PUB_DWNL && $TST_PUB_DWNL
 - echo $TST_PUB_REPR && $TST_PUB_REPR
-- cd ../src/
-- ./run_conc
-- ./run_swea
 
 #*******************************************************************************
 #End
