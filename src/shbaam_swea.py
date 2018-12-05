@@ -16,8 +16,7 @@ import csv
 
 
 advanced               = False
-filename_tags_provided = False
-add_all_variable_names = False
+add_all_variable_names = True
 
 def get_time_step(time_array):
     """Calculates the difference of the the time indexes                       \
@@ -66,11 +65,12 @@ def read_netcdf(netcdf):
     data['longitude_array'] = f.variables['lon']
     data['latitude_array'] = f.variables['lat']
     data['time_array'] = f.variables['time']
+    data['time_units'] = f.variables['time'].units
     data['time_step'] = get_time_step(data['time_array'])
     data['fill_value'] = get_fill_value(f)
-    data['longitude_step'] = abs(data['longitude_array'][1] \
+    data['longitude_step'] = abs(data['longitude_array'][1]                    \
                                  - data['longitude_array'][0])
-    data['latitude_step'] = abs(data['latitude_array'][1] \
+    data['latitude_step'] = abs(data['latitude_array'][1]                      \
                                 - data['latitude_array'][0])
 
     print(' - Number of longitudes : ' + str(data['longitude_size']))
@@ -151,7 +151,7 @@ def find_intersection(polygon, point, index, data):
         polygon_shape = shapely.geometry.shape(polygon_feature['geometry'])
         polygon_prepared = shapely.prepared.prep(polygon_shape)
         # A 'prepared' geometry allows for faster processing after
-        for point_feature_id in [int(x) for x in list( \
+        for point_feature_id in [int(x) for x in list(                         \
                 index.intersection(polygon_shape.bounds))]:
             point_feature = point[point_feature_id]
             point_shape = shapely.geometry.shape(point_feature['geometry'])
@@ -276,7 +276,8 @@ def compute_time_strings(start_time_string, time_size, time_array):
     return time_strings
 
 
-def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time, computation_results, time_array):
+def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time,    \
+                         computation_results, time_array):
     """Takes the list of time strings and                                      \
     creates the output CSV file of the time strings"""
     print('Write timeseries_csv: ' + timeseries_csv)
@@ -285,9 +286,11 @@ def write_timeseries_csv(timeseries_csv, timeseries, time_size, start_time, comp
 
     with open(timeseries_csv, 'wb') as csvfile:
         csvwriter = csv.writer(csvfile, dialect='excel')
-        csvwriter.writerow(['date'] + [computation_result[0] for computation_result in computation_results])
+        csvwriter.writerow(['date'] +                                          \
+         [computation_result[0] for computation_result in computation_results])
         for i in range(time_size):
-            line = [time_strings[i]] + [computation_result[3][i] for computation_result in computation_results]
+            line = [time_strings[i]] +                                         \
+       [computation_result[3][i] for computation_result in computation_results]
             csvwriter.writerow(line)
 
     print(' - timeseries_csv written')
@@ -393,7 +396,7 @@ def form_filename(command_info, file_type, variable_name=None):
                                    ['timeseries', variable_name,               \
                                     command_info['location'], 'tst.csv']))
     elif file_type == 'nc':
-        filename = '_'.join(filter(None, ['map_swea', \
+        filename = '_'.join(filter(None, ['map_swea',                          \
                                           command_info['location'], 'tst.nc']))
 
     return command_info['output_folder'] + '/' + filename
@@ -402,13 +405,7 @@ def form_filename(command_info, file_type, variable_name=None):
 def read_command_info(filenames, command_info):
     """Checks if the file exists and can print the usage of the file           \
     based on whether the command is in advanced mode"""
-    if advanced and len(filenames) != 3:
-        print_usage()
-        print('ERROR: Exactly 5 pathnames must be provided')
-        print('       You must provide a netcdf file, ' +                      \
-              'a polygon shapefile, and a output folder')
-        raise SystemExit(22)
-    if not advanced and len(filenames) != 5:
+    if len(filenames) != 5:
         print_usage()
         print('ERROR: Exactly 5 pathnames must be provided.')
         print('       You must provide a netcdf file, a polygon shapefile,' +  \
@@ -418,15 +415,9 @@ def read_command_info(filenames, command_info):
 
     command_info['netcdf'] = filenames[0]
     command_info['polygon_shapefile'] = filenames[1]
-
-    if advanced:
-        command_info['output_folder'] = filenames[2].strip('/')
-        command_info['point_shapefile'] = form_filename(command_info, 'shp')
-        command_info['map_netcdf'] = form_filename(command_info, 'nc')
-    else:
-        command_info['point_shapefile'] = filenames[2]
-        command_info['timeseries_csv'] = filenames[3]
-        command_info['map_netcdf'] = filenames[4]
+    command_info['point_shapefile'] = filenames[2]
+    command_info['timeseries_csv'] = filenames[3]
+    command_info['map_netcdf'] = filenames[4]
 
     check_if_input_files_exist([command_info['netcdf'],                        \
                                 command_info['polygon_shapefile']])
@@ -445,22 +436,14 @@ def print_usage():
     print('')
 
     print('Options:')
-    print('  -a,  Select all the variable names in the netcdf file to compute.')
     print('  -d,  Specify variable names to compute, SWE, Canint, etc. ' +     \
           'Seperate the names with a comma. The default variable name is SWE.')
-    print('  -p,  Add tags to the output filenames. Provide the tags in ' +    \
-          'the following order, [DATA SOURCE],[DATA MODEL],[TARGET LOCATION]')
-    print('  -t,  Provide start time string in the format of YYYY-MM-DD ' +    \
-          'HH:MM:SS' + '. The default is 2002-04-01 00:00:00')
     print('  -h,  Print this help information.')
 
     print('')
     print('Examples:')
     print('  ./shbaam_swea.py GLDAS_netcdf.nc Nepal.shp ' +                    \
           'GLDAS.VIC.shp timeseries_swea_Nepal.csv map_swea_Nepal.nc')
-    print('  ./shbaam_swea.py -d SWE,Canint -p GLDAS,VIC,Nepal' +              \
-          ' -t \'2002-04-01 00:00:00\' netcdf_file.nc4 Nepal.shp ' +           \
-          './output_folder')
 
 
 def read_command_line():
@@ -468,43 +451,25 @@ def read_command_line():
         Returns the dict, containing the Source, Model, Location,              \
         start_time, and variable_names"""
     global advanced
-    global filename_tags_provided
     global add_all_variable_names
 
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hd:p:t:a')
+        options, arguments = getopt.getopt(sys.argv[1:], 'hd:')
     except getopt.GetoptError:
         print_usage()
+        print('ERROR: Syntax Error with command!')
+        raise SystemExit(22)
 
     command_info = {'source': '', 'model': '', 'location': '',                 \
-                    'start_time': '2002-04-01 00:00:00', 'variable_names': []}
+                    'start_time': '', 'variable_names': []}
     for option, argument in options:
-        if option == '-a':
-            advanced = True
-            add_all_variable_names = True
-        elif option == '-h':
+        if option == '-h':
             print_usage()
             raise SystemExit(0)
         elif option == '-d':
+            add_all_variable_names = False
             advanced = True
             command_info['variable_names'] = argument.split(',')
-        elif option == '-p':
-            filename_tags_provided = True
-            tags = argument.split(',')
-            if len(tags) != 3:
-                print_usage()
-                print('ERROR: You must provide the -p option in the order ' +  \
-                      'of SOURCE,MODEL,LOCATION')
-                raise SystemExit(22)
-            command_info['source'] = tags[0]
-            command_info['model'] = tags[1]
-            command_info['location'] = tags[2]
-        elif option == '-t':
-            command_info['start_time'] = argument
-
-    # Set SWE as the default data to be processed
-    if not advanced:
-        command_info['variable_names'] = ['SWE']
 
     read_command_info(arguments, command_info)
 
@@ -514,9 +479,6 @@ def read_command_line():
 def set_up(data, variable_name, command_info):
     """Registers each variable before computing                                \
     curr_data is the currently processed variable"""
-    if advanced:
-        command_info['timeseries_csv'] = form_filename(command_info,           \
-                                                       'csv', variable_name)
     data['cur_data'] = data['file'].variables[variable_name]
 
 
@@ -526,14 +488,10 @@ def print_command_info(command_info):
     print(' - data       netcdf    ' + command_info['netcdf'])
     print(' - polygon    shapefile ' + command_info['polygon_shapefile'])
 
-    if advanced:
-        print('Output folder:')
-        print(' - ' + command_info['output_folder'])
-    else:
-        print('Output files:')
-        print(' - point      shapefile ' + command_info['point_shapefile'])
-        print(' - timeseries csv       ' + command_info['timeseries_csv'])
-        print(' - map        netcdf    ' + command_info['map_netcdf'])
+    print('Output files:')
+    print(' - point      shapefile ' + command_info['point_shapefile'])
+    print(' - timeseries csv       ' + command_info['timeseries_csv'])
+    print(' - map        netcdf    ' + command_info['map_netcdf'])
 
 
 def check_if_input_files_exist(input_command_info):
@@ -565,16 +523,17 @@ def validate_variable_name(command_info, data):
                       ' is not in the netcdf file')
                 raise SystemExit(22)
 
+def parse_start_time_string(time_units):
+    return ' '.join(time_units.split(' ')[2:])
 
 def post_command_info_setup(command_info, data):
     """Ensures the initial variable names in command_info contains nothing     \
     and proceeds to add the list of proper variable names from the function,   \
     get_computable_variables"""
     if add_all_variable_names:
-        assert len(command_info['variable_names']) == 0
         command_info['variable_names'] = get_computable_variables(command_info,\
                                                                   data)
-
+    command_info['start_time'] = parse_start_time_string(data['time_units'])
 
 def main():
     command_info = read_command_line()
@@ -597,12 +556,14 @@ def main():
                                         long_term_means, total_surface_area)
 
         print_computations(timeseries)
-        data['data'].append((variable_name, data['cur_data'], long_term_means, timeseries))
+        data['data'].append((variable_name, data['cur_data'], long_term_means, \
+                             timeseries))
 
     print('------------------ End of Computation ------------------')
     # Write to output
-    write_timeseries_csv(command_info['timeseries_csv'], timeseries,       \
-                         data['time_size'], command_info['start_time'], data['data'], data['file'].variables['time'])
+    write_timeseries_csv(command_info['timeseries_csv'], timeseries,           \
+                         data['time_size'], command_info['start_time'],        \
+                         data['data'], data['file'].variables['time'])
     write_map_netcdf(command_info['map_netcdf'], data, target_indexes,         \
                      command_info)
 
