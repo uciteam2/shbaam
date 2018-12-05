@@ -431,13 +431,11 @@ def print_usage():
     print('  ./shbaam_sewa.py [input_netcdf_file] [input_polygon_shapefile]' + \
           '[output_temporary_shapefile] [output_timeseries_csv] ' +            \
           '[output_map_netcdf]')
-    print('  ./shbaam_swea.py -d [data1],[data2] ' +                           \
-          '[netcdf_file] [shapefile] [output_folder]')
     print('')
 
     print('Options:')
     print('  -d,  Specify variable names to compute, SWE, Canint, etc. ' +     \
-          'Seperate the names with a comma. The default variable name is SWE.')
+          'Seperate the names with a comma. The default choose all variables.')
     print('  -h,  Print this help information.')
 
     print('')
