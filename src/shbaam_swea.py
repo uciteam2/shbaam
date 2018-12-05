@@ -89,9 +89,6 @@ def create_point_shapefile(data, polygon, point_shapefile):
         and properties of the Point                                            \
         If the file already exists, the cached one will be used instead"""
     print('Create a point shapefile with all the GLDAS grid cells')
-    if os.path.exists(point_shapefile):
-        print(' - Use cached point shapefile.')
-        return
 
     longitude_array = data['longitude_array']
     latitude_array = data['latitude_array']
