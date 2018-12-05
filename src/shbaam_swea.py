@@ -435,7 +435,8 @@ def print_usage():
 
     print('Options:')
     print('  -d,  Specify variable names to compute, SWE, Canint, etc. ' +     \
-          'Seperate the names with a comma. The default choose all variables.')
+          'Seperate the names with a comma. The default choose all variables' +\
+          'other than lat,lon,time')
     print('  -h,  Print this help information.')
 
     print('')
